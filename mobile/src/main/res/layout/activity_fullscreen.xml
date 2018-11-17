@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:background="#000000"
+             tools:context=".FullscreenActivity">
+
+    <!-- The primary full-screen view. This can be replaced with whatever view
+         is needed to present your content, e.g. VideoView, SurfaceView,
+         TextureView, etc. -->
+    <!--<VideoView android:id="@+id/video"
+               android:layout_width="match_parent"
+               android:layout_height="wrap_content">
+    </VideoView>-->
+
+    <com.google.android.exoplayer2.ui.PlayerView
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/video"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+    />
+
+</FrameLayout>
