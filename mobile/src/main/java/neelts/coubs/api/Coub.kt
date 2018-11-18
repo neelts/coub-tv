@@ -1,10 +1,8 @@
 package neelts.coubs.api
 
 data class Coub (
-	val id : Int,
-	val raw_video_title : String,
-	val file_versions : FileVersions,
-	val audio_file_url : String
+	val permalink : String,
+	val file_versions : FileVersions
 )
 
 data class Timeline (

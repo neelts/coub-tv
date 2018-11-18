@@ -123,7 +123,7 @@ class FullscreenActivity : Activity() {
 
 			val coub = coubs[index]
 			val html5 = coub.file_versions.html5
-			val file = coub.id.toString()
+			val file = coub.permalink
 
 			val videoFile = getFile(file, VIDEO)
 			if (videoFile.exists()) {
