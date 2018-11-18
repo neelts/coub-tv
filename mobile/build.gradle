@@ -8,6 +8,7 @@ android {
     compileSdkVersion 27
     defaultConfig {
         applicationId "neelts.coubs"
+        archivesBaseName = "coub-tv"
         minSdkVersion 15
         targetSdkVersion 24
         versionCode 1

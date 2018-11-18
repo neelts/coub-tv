@@ -20,15 +20,11 @@ import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_fullscreen.*
-import neelts.coubs.api.Coubs
+import neelts.coubs.api.Coub
 import neelts.coubs.api.Timeline
 import java.io.File
 import kotlin.concurrent.thread
 
-/**
- * An example full-screen activity that shows and hides the system UI (i.e.
- * status bar and navigation/system bar) with user interaction.
- */
 class FullscreenActivity : Activity() {
 
 	companion object {
@@ -41,7 +37,7 @@ class FullscreenActivity : Activity() {
 	private var index: Int = 0
 	private var page: Int = 1
 
-	private var coubs: Array<Coubs> = emptyArray()
+	private var coubs: Array<Coub> = emptyArray()
 
 	private var audioSource: ExtractorMediaSource? = null
 	private var videoSource: ExtractorMediaSource? = null
