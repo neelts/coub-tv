@@ -1,6 +1,7 @@
 package neelts.coubs.api
 
 data class Coub (
+	val id : Int,
 	val permalink : String,
 	val file_versions : FileVersions
 )

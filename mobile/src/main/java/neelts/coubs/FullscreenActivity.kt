@@ -13,6 +13,7 @@ import android.view.Window
 import android.view.WindowManager
 import com.github.kittinunf.fuel.android.extension.responseJson
 import com.github.kittinunf.fuel.httpGet
+import com.github.kittinunf.fuel.httpPost
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
@@ -29,6 +30,7 @@ class FullscreenActivity : Activity() {
 
 	companion object {
 		const val COUB = "http://coub.com/api/v2"
+		const val COUBS = "http://coub.com/coubs"
 		const val WRITE = Manifest.permission.WRITE_EXTERNAL_STORAGE
 		const val AUDIO = "mp3"
 		const val VIDEO = "mp4"
@@ -39,6 +41,8 @@ class FullscreenActivity : Activity() {
 
 	private var coubs: Array<Coub> = emptyArray()
 
+	private var id: Int = 0
+	private var link: String? = null
 	private var audioSource: ExtractorMediaSource? = null
 	private var videoSource: ExtractorMediaSource? = null
 
@@ -103,14 +107,25 @@ class FullscreenActivity : Activity() {
 		if (videoSource != null && audioSource != null) {
 			audioPlayer.prepare(audioSource)
 			videoPlayer.prepare(videoSource)
+			thread { increment() }
 		}
 	}
 
-	private fun getHot(media: Boolean = true) {
-		"$COUB/timeline/hot?page=$page".httpGet().responseJson().third.fold(
+	private fun increment() {
+		"$COUBS/$link/increment_views".httpPost().responseString().third.fold(
+			{ response -> println("views: $response") },
+			{ error -> println(error) }
+		)
+	}
+
+	private fun getHot(media: Boolean = true, extra: String = "") {
+		"$COUB/timeline/hot?page=$page$extra".httpGet().responseJson().third.fold(
 			{ response -> run {
 				val timeline = Gson().fromJson(response.content, Timeline::class.java)
-				coubs = coubs.plus(timeline.coubs)
+				if (timeline.coubs.isNotEmpty()) {
+					id = timeline.next
+					coubs = coubs.plus(timeline.coubs)
+				}
 				if (media) getMedia()
 			} },
 			{ error -> println(error.toString()) }
@@ -123,31 +138,33 @@ class FullscreenActivity : Activity() {
 
 			val coub = coubs[index]
 			val html5 = coub.file_versions.html5
-			val file = coub.permalink
+			val link = coub.permalink
 
-			val videoFile = getFile(file, VIDEO)
+			val videoFile = getFile(link, VIDEO)
 			if (videoFile.exists()) {
 				videoSource = buildMediaSource(Uri.fromFile(videoFile))
 			} else {
 				var url = html5.video.high?.url
 				if (url == null) url = html5.video.med?.url
 				url?.httpGet()?.response()?.third?.fold(
-					{ data -> saveVideo(file, data) },
+					{ data -> saveVideo(link, data) },
 					{ error -> println(error.toString()) }
 				)
 			}
 
-			val audioFile = getFile(file, AUDIO)
+			val audioFile = getFile(link, AUDIO)
 			if (audioFile.exists()) {
 				audioSource = buildMediaSource(Uri.fromFile(audioFile))
 			} else {
 				var url = html5.audio.high?.url
 				if (url == null) url = html5.audio.med?.url
 				url?.httpGet()?.response()?.third?.fold(
-					{ data -> saveAudio(file, data) },
+					{ data -> saveAudio(link, data) },
 					{ error -> println(error.toString()) }
 				)
 			}
+
+			this.link = link
 		}
 	}
 
@@ -202,7 +219,7 @@ class FullscreenActivity : Activity() {
 			getNext()
 		} else {
 			page++
-			thread { getHot(false) }.join()
+			thread { getHot(false, "&anchor=$id") }.join()
 			getNext()
 		}
 		return true
