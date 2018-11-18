@@ -1,4 +1,4 @@
-# coub-tv
+# Coub TV
 
 Android TV / Mobile / Tablet Leanback Coub Player
 
