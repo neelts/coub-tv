@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Coub TV</string>
+    <string name="category_icon">category icon</string>
 </resources>

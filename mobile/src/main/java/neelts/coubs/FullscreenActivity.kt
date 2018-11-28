@@ -7,10 +7,9 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
-import android.view.KeyEvent
-import android.view.MotionEvent
-import android.view.Window
-import android.view.WindowManager
+import android.transition.Fade
+import android.transition.TransitionManager
+import android.view.*
 import com.github.kittinunf.fuel.android.extension.responseJson
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.httpPost
@@ -36,6 +35,21 @@ class FullscreenActivity : Activity() {
 		const val VIDEO = "mp4"
 	}
 
+	enum class TimelineType(val type: String, val text: String) {
+		HOT_DAILY("timeline/hot", "Hot Daily"),
+		HOT_WEEKLY("timeline/hot/weekly", "Hot Weekly"),
+		HOT_MONTHLY("timeline/hot/monthly", "Hot Monthly")
+	}
+
+	private val timelines = arrayOf(
+		TimelineType.HOT_MONTHLY,
+		TimelineType.HOT_WEEKLY,
+		TimelineType.HOT_DAILY
+	)
+
+	private var timeline: TimelineType = TimelineType.HOT_DAILY
+
+	private var timelineIndex: Int = timelines.indexOf(timeline)
 	private var index: Int = 0
 	private var page: Int = 1
 
@@ -91,7 +105,7 @@ class FullscreenActivity : Activity() {
 	}
 
 	private fun init() {
-		thread { getHot() }.join()
+		thread { getCoubs() }.join()
 		start()
 	}
 
@@ -118,8 +132,8 @@ class FullscreenActivity : Activity() {
 		)
 	}
 
-	private fun getHot(media: Boolean = true, extra: String = "") {
-		"$COUB/timeline/hot?page=$page$extra".httpGet().responseJson().third.fold(
+	private fun getCoubs(media: Boolean = true, extra: String = "") {
+		"$COUB/${timeline.type}?page=$page$extra".httpGet().responseJson().third.fold(
 			{ response -> run {
 				val timeline = Gson().fromJson(response.content, Timeline::class.java)
 				if (timeline.coubs.isNotEmpty()) {
@@ -196,6 +210,8 @@ class FullscreenActivity : Activity() {
 		return when (keyCode) {
 			KeyEvent.KEYCODE_DPAD_LEFT -> left()
 			KeyEvent.KEYCODE_DPAD_RIGHT -> right()
+			KeyEvent.KEYCODE_DPAD_UP -> up()
+			KeyEvent.KEYCODE_DPAD_DOWN -> down()
 			else -> super.onKeyDown(keyCode, event)
 		}
 	}
@@ -215,14 +231,58 @@ class FullscreenActivity : Activity() {
 
 	private fun right(): Boolean {
 		index++
+		hideNotice()
 		if (index < coubs.size) {
 			getNext()
 		} else {
 			page++
-			thread { getHot(false, "&anchor=$id") }.join()
+			thread { getCoubs(false, "&anchor=$id") }.join()
 			getNext()
 		}
 		return true
+	}
+
+	private fun up(): Boolean {
+		if (timelineIndex > 0) {
+			timelineIndex--
+			getTimeline()
+		}
+		return true
+	}
+
+	private fun down(): Boolean {
+		if (timelineIndex < timelines.size - 1) {
+			timelineIndex++
+			getTimeline()
+		}
+		return true
+	}
+
+	private fun getTimeline() {
+		timeline = timelines[timelineIndex]
+		showNotice()
+		caption.text = timeline.text
+		reset()
+		thread { getCoubs() }.join()
+		getNext()
+	}
+
+	private fun reset() {
+		if (coubs.isNotEmpty()) coubs = emptyArray()
+	}
+
+	private fun showNotice() {
+		if (notice.visibility == View.INVISIBLE) {
+			TransitionManager.beginDelayedTransition(notice, Fade(Fade.MODE_IN))
+			notice.visibility = View.VISIBLE
+		}
+	}
+
+	private fun hideNotice() {
+		if (notice.visibility == View.VISIBLE) {
+			TransitionManager.beginDelayedTransition(notice, Fade())
+			notice.visibility = View.INVISIBLE
+		}
 	}
 
 	override fun onStart() {
